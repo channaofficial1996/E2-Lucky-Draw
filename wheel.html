@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: "Khmer OS Battambang", "Hanuman",
+        system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       text-align: center;
       margin: 0;
       padding: 20px;
@@ -19,22 +20,24 @@
       justify-content: center;
       gap: 8px;
     }
-    #emoji {
-      font-size: 26px;
-    }
+    #emoji { font-size: 26px; }
+
+    /* pointer at top, pointing down */
     #pointer {
       width: 0;
       height: 0;
       border-left: 18px solid transparent;
       border-right: 18px solid transparent;
-      border-bottom: 30px solid #e53935;
+      border-top: 30px solid #e53935;
       margin: 10px auto;
+      transform: translateY(-8px);
     }
+
     #wheel-wrapper {
       position: relative;
       width: 280px;
       height: 280px;
-      margin: 10px auto 20px;
+      margin: 10px auto 12px;
     }
     #wheel {
       width: 100%;
@@ -43,30 +46,14 @@
       border: 6px solid #333;
       position: relative;
       overflow: hidden;
-      background: white;
+      background: #ffffff;
       transition: transform 4s cubic-bezier(.17,.67,.32,1.34);
     }
-    .segment {
-      position: absolute;
-      width: 50%;
-      height: 50%;
-      top: 50%;
-      left: 50%;
-      transform-origin: 0% 0%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      text-align: center;
-      color: #fff;
-      padding: 4px;
-      box-sizing: border-box;
-    }
-    .segment:nth-child(odd) {
-      background: #42a5f5;
-    }
-    .segment:nth-child(even) {
-      background: #66bb6a;
+
+    #wheelCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
     #center-result {
@@ -91,15 +78,42 @@
       transform: scale(1);
       pointer-events: auto;
     }
-    #center-result .label {
-      font-size: 12px;
-      opacity: 0.8;
-      margin-bottom: 4px;
+    #center-result .label { font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
+    #center-result .prize-text { font-size: 18px; font-weight: 700; text-align: center; }
+
+    #spinBtn {
+      padding: 12px 30px;
+      font-size: 16px;
+      border-radius: 999px;
+      border: none;
+      background: #ff9800;
+      color: #fff;
+      cursor: pointer;
+      min-width: 140px;
     }
-    #center-result .prize-text {
-      font-size: 18px;
-      font-weight: 700;
-      text-align: center;
+    #spinBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .bottom-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+    .btn {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      min-width: 140px;
+      color: #fff;
+    }
+    #agentBtn { background:#1976d2; }
+
+    #status {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: 500;
     }
 
     #celebrate {
@@ -119,36 +133,16 @@
       from { transform: translateY(-40px) rotate(0deg); opacity: 1; }
       to   { transform: translateY(120vh) rotate(360deg); opacity: 0; }
     }
-
-    #spinBtn {
-      padding: 12px 30px;
-      font-size: 16px;
-      border-radius: 999px;
-      border: none;
-      background: #ff9800;
-      color: #fff;
-      cursor: pointer;
-      margin-top: 8px;
-      min-width: 140px;
-    }
-    #spinBtn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    #result {
-      margin-top: 10px;
-      font-size: 14px;
-      font-weight: 500;
-    }
   </style>
 </head>
 <body>
-  <h2><span id="emoji">🎰</span> <span>Spin & Win</span></h2>
+  <h2><span id="emoji">🎰</span><span>Spin & Win</span></h2>
   <div id="pointer"></div>
 
   <div id="wheel-wrapper">
-    <div id="wheel"></div>
+    <div id="wheel">
+      <canvas id="wheelCanvas" width="500" height="500"></canvas>
+    </div>
 
     <div id="center-result">
       <div class="label">You won</div>
@@ -158,48 +152,157 @@
 
   <button id="spinBtn">SPIN</button>
 
-  <p id="result"></p>
+  <div class="bottom-row">
+    <button id="agentBtn" class="btn">💬 ភ្នាក់ងារបម្រើអតិថិជនt</button>
+  </div>
 
-  <!-- html2canvas for screenshot -->
+  <p id="status"></p>
+
+  <!-- 🔊 Spin start sound -->
+  <audio id="spinSound">
+    <source src="/mnt/data/mixkit-bike-wheel-spinning-1613.wav" type="audio/wav">
+  </audio>
+
+  <!-- 🔊 Jackpot sound -->
+  <audio id="jackpotSound">
+    <source src="/mnt/data/mixkit-cheering-crowd-loud-whistle-610.wav" type="audio/wav">
+  </audio>
+
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <script>
     const prizes = [
-      "Free Coffee",
-      "50% Discount",
+      "ប្រាក់បន្ថែម 100%",
+      "ប្រាក់បន្ថែម 10$",
+      "ប្រាក់បន្ថែម 5$",
       "Try Again",
-      "Free Sticker",
-      "Lucky Spin x2",
-      "Small Gift"
+      "ប្រាក់បន្ថែម 100%",
+      "ប្រាក់បន្ថែម 10$",
+      "ប្រាក់បន្ថែម 5$",
+      "Try Again",
+      "ប្រាក់បន្ថែម 100%",
+      "ប្រាក់បន្ថែម 10$",
+      "ប្រាក់បន្ថែម 5$",
     ];
 
     const wheel = document.getElementById("wheel");
-    const result = document.getElementById("result");
     const spinBtn = document.getElementById("spinBtn");
+    const agentBtn = document.getElementById("agentBtn");
     const center = document.getElementById("center-result");
     const centerPrize = document.getElementById("centerPrize");
+    const statusEl = document.getElementById("status");
+
+    const spinSoundEl = document.getElementById("spinSound");
+    const jackpotSoundEl = document.getElementById("jackpotSound");
 
     const anglePer = 360 / prizes.length;
     let currentRotation = 0;
     let spinning = false;
     let currentPrize = null;
 
+    // CANVAS
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const outerRadius = Math.min(centerX, centerY) - 5;
+
+    function drawWheel() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const radPer = (Math.PI * 2) / prizes.length;
+
+      for (let i = 0; i < prizes.length; i++) {
+        const startAngle = -Math.PI / 2 + i * radPer;
+        const endAngle   = startAngle + radPer;
+        const midAngle   = (startAngle + endAngle) / 2;
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = i % 2 === 0 ? "#42a5f5" : "#66bb6a";
+        ctx.fill();
+
+        ctx.save();
+        const textRadius = outerRadius - 40;
+        ctx.translate(
+          centerX + Math.cos(midAngle) * textRadius,
+          centerY + Math.sin(midAngle) * textRadius
+        );
+        ctx.rotate(midAngle + Math.PI / 2);
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = '18px "Khmer OS Battambang","Hanuman",system-ui,sans-serif';
+        ctx.fillText(prizes[i], 0, 0);
+        ctx.restore();
+      }
+    }
+    drawWheel();
+
+    // Telegram WebApp
     const tg = window.Telegram && window.Telegram.WebApp
       ? window.Telegram.WebApp
       : null;
-    if (tg) {
-      tg.expand();
+    if (tg) tg.expand();
+
+    const params = new URLSearchParams(window.location.search);
+    const cidFromUrl = params.get("cid");
+
+    // ⭐⭐⭐ LIMIT SPIN / DAY (កំណត់នៅទីនេះ)
+    const SPINS_PER_DAY = 5; // ⬅⬅⬅ កែលេខនេះដើម្បីកំណត់ចំនួន spin / 1ថ្ងៃ / 1 user
+
+    function getUserId() {
+      const webUser = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+      return cidFromUrl || (webUser && webUser.id) || null;
     }
 
-    // build wheel
-    prizes.forEach((text, i) => {
-      const seg = document.createElement("div");
-      seg.className = "segment";
-      seg.style.transform =
-        `rotate(${i * anglePer}deg) skewY(${90 - anglePer}deg)`;
-      seg.textContent = text;
-      wheel.appendChild(seg);
-    });
+    // N ដងក្នុង 1ថ្ងៃ
+    function canSpinToday() {
+      try {
+        const uid = getUserId();
+        if (!uid) return true;
+
+        const countKey = "wheel_spin_count_" + uid;
+        const dateKey  = "wheel_spin_date_" + uid;
+
+        const today = new Date().toISOString().slice(0, 10);
+        const lastDate = localStorage.getItem(dateKey);
+        let count = Number(localStorage.getItem(countKey) || 0);
+
+        // ថ្ងៃថ្មី → reset count
+        if (lastDate !== today) {
+          localStorage.setItem(dateKey, today);
+          localStorage.setItem(countKey, "0");
+          return true;
+        }
+
+        return count < SPINS_PER_DAY;
+      } catch (e) {
+        return true;
+      }
+    }
+
+    function markSpunToday() {
+      try {
+        const uid = getUserId();
+        if (!uid) return;
+
+        const countKey = "wheel_spin_count_" + uid;
+        const dateKey  = "wheel_spin_date_" + uid;
+
+        const today = new Date().toISOString().slice(0, 10);
+        const lastDate = localStorage.getItem(dateKey);
+
+        if (lastDate !== today) {
+          localStorage.setItem(dateKey, today);
+          localStorage.setItem(countKey, "1");
+        } else {
+          let count = Number(localStorage.getItem(countKey) || 0);
+          localStorage.setItem(countKey, String(count + 1));
+        }
+      } catch (e) {}
+    }
 
     function showCelebrate() {
       const celebrate = document.createElement("div");
@@ -207,31 +310,39 @@
       document.body.appendChild(celebrate);
       celebrate.innerHTML = "";
       celebrate.style.display = "block";
-      const emojis = ["🎉", "🎊", "✨", "🎈", "⭐"];
+      const emojis = ["🎉","🎊","✨","🎈","⭐"];
 
       for (let i = 0; i < 25; i++) {
         const span = document.createElement("span");
         span.className = "confetti";
-        span.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        span.style.left = Math.random() * 100 + "vw";
-        span.style.animationDelay = (Math.random() * 0.7) + "s";
+        span.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        span.style.left = Math.random()*100 + "vw";
+        span.style.animationDelay = (Math.random()*0.7) + "s";
         celebrate.appendChild(span);
       }
-
-      setTimeout(() => {
-        celebrate.remove();
-      }, 2000);
+      setTimeout(() => celebrate.remove(), 2000);
     }
 
     spinBtn.onclick = () => {
+
+      if (!canSpinToday()) {
+        statusEl.textContent = "❌ ថ្ងៃនេះអ្នកបានបង្វិលរួចហើយ សូមព្យាយាមម្តងទៀតនៅថ្ងៃស្អែក!";
+        return;
+      }
+
       if (spinning) return;
       spinning = true;
       spinBtn.disabled = true;
-      result.textContent = "";
+      statusEl.textContent = "";
       center.classList.remove("show");
+
+      // 🔊 Spin start sound
+      spinSoundEl.currentTime = 0;
+      spinSoundEl.play().catch(()=>{});
 
       const randIndex = Math.floor(Math.random() * prizes.length);
       const spins = 5;
+
       const targetAngle =
         spins * 360 + (360 - randIndex * anglePer - anglePer / 2);
 
@@ -242,62 +353,88 @@
         const prize = prizes[randIndex];
         currentPrize = prize;
 
-        setTimeout(() => {
-          centerPrize.textContent = prize;
-          center.classList.add("show");
-          result.textContent = "You won: " + prize + " 🎉";
+        centerPrize.textContent = prize;
+        center.classList.add("show");
+        statusEl.textContent = "🎊អ្នកទទួលបាន🎊: " + prize + " 🎉";
+        showCelebrate();
 
-          showCelebrate();
-          sendClaim();
-        }, 150);
+        // 🔊 Jackpot sound
+        jackpotSoundEl.currentTime = 0;
+        jackpotSoundEl.play().catch(()=>{});
+
+        // increase count today
+        markSpunToday();
+
+        statusEl.textContent = "📨កំពុងផ្ញើទៅ bot...";
+        autoClaim()
+          .then((ok) => {
+            if (ok) {
+              statusEl.textContent = "✅ការផ្ញើបានជោគជ័យ សូមត្រឡប់ទៅ Bot ដើម្បីបំពេញឈ្មោះ.";
+            } else {
+              statusEl.textContent = "❌ Failed to send, please try again.";
+            }
+          })
+          .catch(err => {
+            console.error("Claim error:", err);
+            statusEl.textContent = "❌ Failed to send, please try again.";
+          })
+          .finally(() => {
+            if (tg) tg.close();
+          });
 
         spinning = false;
         spinBtn.disabled = false;
       }, 4000);
     };
 
-    function sendClaim() {
-      if (!currentPrize) return;
+    const agentUrl = "https://t.me/E2betcs";
+    agentBtn.onclick = () => {
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(agentUrl);
+      } else {
+        window.open(agentUrl, "_blank");
+      }
+    };
 
-      const user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+    function autoClaim() {
+      const userId = getUserId();
+
       const basePayload = {
         prize: currentPrize,
-        user_id: user ? user.id : null,
+        user_id: userId,
       };
 
-      if (window.html2canvas) {
-        html2canvas(document.getElementById("wheel-wrapper")).then(canvas => {
-          const dataUrl = canvas.toDataURL("image/png");
-          const payload = Object.assign({}, basePayload, { image: dataUrl });
+      if (!userId) {
+        console.warn("No user_id/cid found, claim may fail.");
+      }
 
-          return fetch("/claim", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(payload),
+      if (window.html2canvas) {
+        return html2canvas(document.getElementById("wheel-wrapper"))
+          .then(canvas => {
+            const dataUrl = canvas.toDataURL("image/png");
+            const payload = Object.assign({}, basePayload, { image: dataUrl });
+
+            return fetch("/claim", {
+              method: "POST",
+              headers: {"Content-Type":"application/json"},
+              body: JSON.stringify(payload)
+            });
+          })
+          .then(r => r && r.ok)
+          .catch(err => {
+            console.error("Screenshot failed, fallback:", err);
+            return fetch("/claim", {
+              method: "POST",
+              headers: {"Content-Type":"application/json"},
+              body: JSON.stringify(basePayload)
+            }).then(r => r && r.ok);
           });
-        }).then(r => {
-          if (!r.ok) throw new Error("Claim failed");
-          if (tg) tg.close();
-        }).catch(err => {
-          console.error("Claim with screenshot failed, fallback:", err);
-          // fallback: send without image
-          fetch("/claim", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(basePayload),
-          }).finally(() => {
-            if (tg) tg.close();
-          });
-        });
       } else {
-        // no html2canvas -> fallback to text only
-        fetch("/claim", {
+        return fetch("/claim", {
           method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(basePayload),
-        }).finally(() => {
-          if (tg) tg.close();
-        });
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(basePayload)
+        }).then(r => r && r.ok);
       }
     }
   </script>
