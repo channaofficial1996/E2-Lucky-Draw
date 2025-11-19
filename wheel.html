@@ -207,64 +207,64 @@
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     const outerRadius = Math.min(centerX, centerY) - 5;
-function drawTextAlongArc(ctx, text, centerX, centerY, radius, startAngle, endAngle) {
-  if (!text) return;
 
-  const totalAngle = endAngle - startAngle;
-  const len = text.length;
-  if (len === 0) return;
+    function drawTextAlongArc(ctx, text, centerX, centerY, radius, startAngle, endAngle) {
+      if (!text) return;
 
-  // បន្តះមួយចំណិត ដើម្បីមិនឲ្យអក្សរភ្ជាប់គ្នាចុង segment
-  const padding = totalAngle * 0.15;
-  const usableAngle = totalAngle - padding;
-  const anglePerChar = usableAngle / Math.max(len - 1, 1);
-  let angle = startAngle + padding / 2;
+      const totalAngle = endAngle - startAngle;
+      const len = text.length;
+      if (len === 0) return;
 
-  ctx.save();
-  ctx.fillStyle = "#fff";
-  ctx.font = '20px "Khmer OS Battambang","Hanuman",system-ui,sans-serif'; // 👉 ធំជាងមុន
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
+      const padding = totalAngle * 0.15;
+      const usableAngle = totalAngle - padding;
+      const anglePerChar = usableAngle / Math.max(len - 1, 1);
+      let angle = startAngle + padding / 2;
 
-  for (let i = 0; i < len; i++) {
-    const ch = text[i];
-    const x = centerX + Math.cos(angle) * radius;
-    const y = centerY + Math.sin(angle) * radius;
+      ctx.save();
+      ctx.fillStyle = "#fff";
+      ctx.font = '20px "Khmer OS Battambang","Hanuman",system-ui,sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
 
-    ctx.save();
-    ctx.translate(x, y);
-    // បង្វិលអក្សរតាម arc
-    ctx.rotate(angle + Math.PI / 2);
-    ctx.fillText(ch, 0, 0);
-    ctx.restore();
+      for (let i = 0; i < len; i++) {
+        const ch = text[i];
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
 
-    angle += anglePerChar;
-  }
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle + Math.PI / 2);
+        ctx.fillText(ch, 0, 0);
+        ctx.restore();
 
-  ctx.restore();
-}
+        angle += anglePerChar;
+      }
 
-function drawWheel() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const radPer = (Math.PI * 2) / prizes.length;
+      ctx.restore();
+    }
 
-  for (let i = 0; i < prizes.length; i++) {
-    const startAngle = -Math.PI / 2 + i * radPer;
-    const endAngle   = startAngle + radPer;
+    function drawWheel() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const radPer = (Math.PI * 2) / prizes.length;
 
-    // 🔹 គូរផ្ទៃ segment
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
-    ctx.closePath();
-    ctx.fillStyle = i % 2 === 0 ? "#42a5f5" : "#66bb6a";
-    ctx.fill();
+      for (let i = 0; i < prizes.length; i++) {
+        const startAngle = -Math.PI / 2 + i * radPer;
+        const endAngle   = startAngle + radPer;
 
-    // 🔹 គូរ​អក្សរ​រត់តាមក្រឡា
-    const textRadius = outerRadius - 35; // កណ្ដាលបន្តិចក្នុង segment
-    drawTextAlongArc(ctx, prizes[i], centerX, centerY, textRadius, startAngle, endAngle);
-  }
-}
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = i % 2 === 0 ? "#42a5f5" : "#66bb6a";
+        ctx.fill();
+
+        const textRadius = outerRadius - 35;
+        drawTextAlongArc(ctx, prizes[i], centerX, centerY, textRadius, startAngle, endAngle);
+      }
+    }
+
+    // 🔹 Draw wheel once on load
+    drawWheel();
 
     // Telegram WebApp
     const tg = window.Telegram && window.Telegram.WebApp
@@ -275,15 +275,13 @@ function drawWheel() {
     const params = new URLSearchParams(window.location.search);
     const cidFromUrl = params.get("cid");
 
-    // ⭐⭐⭐ LIMIT SPIN / DAY (កំណត់នៅទីនេះ)
-    const SPINS_PER_DAY = 5; // ⬅⬅⬅ កែលេខនេះដើម្បីកំណត់ចំនួន spin / 1ថ្ងៃ / 1 user
+    const SPINS_PER_DAY = 5;
 
     function getUserId() {
       const webUser = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
       return cidFromUrl || (webUser && webUser.id) || null;
     }
 
-    // N ដងក្នុង 1ថ្ងៃ
     function canSpinToday() {
       try {
         const uid = getUserId();
@@ -296,7 +294,6 @@ function drawWheel() {
         const lastDate = localStorage.getItem(dateKey);
         let count = Number(localStorage.getItem(countKey) || 0);
 
-        // ថ្ងៃថ្មី → reset count
         if (lastDate !== today) {
           localStorage.setItem(dateKey, today);
           localStorage.setItem(countKey, "0");
@@ -362,7 +359,6 @@ function drawWheel() {
       statusEl.textContent = "";
       center.classList.remove("show");
 
-      // 🔊 Spin start sound
       spinSoundEl.currentTime = 0;
       spinSoundEl.play().catch(()=>{});
 
@@ -384,11 +380,9 @@ function drawWheel() {
         statusEl.textContent = "🎊អ្នកទទួលបាន🎊: " + prize + " 🎉";
         showCelebrate();
 
-        // 🔊 Jackpot sound
         jackpotSoundEl.currentTime = 0;
         jackpotSoundEl.play().catch(()=>{});
 
-        // increase count today
         markSpunToday();
 
         statusEl.textContent = "📨កំពុងផ្ញើទៅ bot...";
