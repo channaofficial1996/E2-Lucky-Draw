@@ -106,7 +106,7 @@ def send_photo(chat_id, photo, caption=None, parse_html=True, reply_markup=None)
 def send_spin_inline(chat_id: int):
     """Send inline 'Open Spin Wheel' button (used by /start & 🎰 បង្វិលកង)."""
     wheel_url = f"{WEBAPP_URL}/wheel?cid={chat_id}&v=4_2_2"
-    txt = "🎰 សូមស្វាគមន៍មកកាន់កម្មវិធីកង់រង្វាន់!\nចុចប៊ូតុងខាងក្រោម ដើម្បី បង្វិលកង 🎯"
+    txt = "🎰ចុចប៊ូតុងខាងក្រោមដើម្បីបង្វិលកង 🎯"
     kb = {
         "inline_keyboard": [
             [{"text": "🎰 បង្វិលកងផ្សងសំណាង", "web_app": {"url": wheel_url}}]
