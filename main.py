@@ -117,15 +117,11 @@ def send_spin_inline(chat_id: int):
 
 def send_start_message(chat_id: int):
     """Show reply keyboard + inline spin button."""
-    # ✅ បន្ថែម menu_txt នៅទីនេះ (original bug: menu_txt មិនបានកំណត់)
-    menu_txt = "ជ្រើសប៊ូតុងខាងក្រោម 👇"
-
     # reply keyboard (2 buttons) – persistent under input bar
-    send_message(chat_id, menu_txt, reply_markup=MAIN_KEYBOARD, parse_html=False)
+    send_message(chat_id, " ", reply_markup=MAIN_KEYBOARD, parse_html=False)
 
     # inline button for opening webapp
     send_spin_inline(chat_id)
-
 
 # ---------- Limit System ----------
 def check_rate_limit(user_id: str):
