@@ -176,13 +176,13 @@
       "ប្រាក់បន្ថែម 100%",
       "ប្រាក់បន្ថែម 110%",
       "ប្រាក់បន្ថែម 3%",
-      "ប្រាក់បន្ថែម 80%%",
+      "ប្រាក់បន្ថែម 80%",
       "Try Again",
       "ប្រាក់បន្ថែម 150%",
       "ប្រាក់បន្ថែម 100%",
       "ប្រាក់បន្ថែម 110%",
       "ប្រាក់បន្ថែម 3%",
-      "ប្រាក់បន្ថែម 80%%",
+      "ប្រាក់បន្ថែម 80%",
       "Try Again",
     ];
 
@@ -208,36 +208,32 @@
     const centerY = canvas.height / 2;
     const outerRadius = Math.min(centerX, centerY) - 5;
 
-    function drawTextAlongArc(ctx, text, centerX, centerY, radius, startAngle, endAngle) {
+    // 🔠 draw radial text (like example image)
+    function drawRadialText(text, startAngle, endAngle) {
       if (!text) return;
-
-      const totalAngle = endAngle - startAngle;
-      const len = text.length;
-      if (len === 0) return;
-
-      const padding = totalAngle * 0.15;
-      const usableAngle = totalAngle - padding;
-      const anglePerChar = usableAngle / Math.max(len - 1, 1);
-      let angle = startAngle + padding / 2;
+      const midAngle = (startAngle + endAngle) / 2;
 
       ctx.save();
-      ctx.fillStyle = "#fff";
+      ctx.translate(centerX, centerY);
+      ctx.rotate(midAngle);
+
+      ctx.fillStyle = "#ffffff";
       ctx.font = '20px "Khmer OS Battambang","Hanuman",system-ui,sans-serif';
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      for (let i = 0; i < len; i++) {
-        const ch = text[i];
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius;
+      const radius = outerRadius - 40;
 
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(angle + Math.PI / 2);
-        ctx.fillText(ch, 0, 0);
-        ctx.restore();
-
-        angle += anglePerChar;
+      // បំបែកជាពីរជួរបើអក្សរវែង
+      const parts = text.split(" ");
+      if (parts.length <= 2) {
+        ctx.fillText(text, 0, -radius);
+      } else {
+        const mid = Math.ceil(parts.length / 2);
+        const line1 = parts.slice(0, mid).join(" ");
+        const line2 = parts.slice(mid).join(" ");
+        ctx.fillText(line1, 0, -radius - 12);
+        ctx.fillText(line2, 0, -radius + 12);
       }
 
       ctx.restore();
@@ -251,6 +247,7 @@
         const startAngle = -Math.PI / 2 + i * radPer;
         const endAngle   = startAngle + radPer;
 
+        // segment
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
@@ -258,12 +255,12 @@
         ctx.fillStyle = i % 2 === 0 ? "#42a5f5" : "#66bb6a";
         ctx.fill();
 
-        const textRadius = outerRadius - 35;
-        drawTextAlongArc(ctx, prizes[i], centerX, centerY, textRadius, startAngle, endAngle);
+        // text along radius
+        drawRadialText(prizes[i], startAngle, endAngle);
       }
     }
 
-    // 🔹 Draw wheel once on load
+    // 👉 VERY IMPORTANT: draw wheel once
     drawWheel();
 
     // Telegram WebApp
@@ -275,7 +272,8 @@
     const params = new URLSearchParams(window.location.search);
     const cidFromUrl = params.get("cid");
 
-    const SPINS_PER_DAY = 5;
+    // ⭐⭐⭐ LIMIT SPIN / DAY (កំណត់នៅទីនេះ)
+    const SPINS_PER_DAY = 5; // change this if you want more/less spins per day
 
     function getUserId() {
       const webUser = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
@@ -299,7 +297,6 @@
           localStorage.setItem(countKey, "0");
           return true;
         }
-
         return count < SPINS_PER_DAY;
       } catch (e) {
         return true;
@@ -347,7 +344,6 @@
     }
 
     spinBtn.onclick = () => {
-
       if (!canSpinToday()) {
         statusEl.textContent = "❌ ថ្ងៃនេះអ្នកបានបង្វិលរួចហើយ សូមព្យាយាមម្តងទៀតនៅថ្ងៃស្អែក!";
         return;
@@ -364,7 +360,6 @@
 
       const randIndex = Math.floor(Math.random() * prizes.length);
       const spins = 5;
-
       const targetAngle =
         spins * 360 + (360 - randIndex * anglePer - anglePer / 2);
 
