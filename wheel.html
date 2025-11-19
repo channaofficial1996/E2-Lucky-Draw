@@ -208,7 +208,7 @@
     const centerY = canvas.height / 2;
     const outerRadius = Math.min(centerX, centerY) - 5;
 
-    // 🔠 draw radial text (like example image)
+    // 🔠 draw radial text (vertical from center out)
     function drawRadialText(text, startAngle, endAngle) {
       if (!text) return;
       const midAngle = (startAngle + endAngle) / 2;
@@ -224,7 +224,7 @@
 
       const radius = outerRadius - 40;
 
-      // បំបែកជាពីរជួរបើអក្សរវែង
+      // បំបែកជា ២ បន្ទាត់ បើអក្សរវែង
       const parts = text.split(" ");
       if (parts.length <= 2) {
         ctx.fillText(text, 0, -radius);
@@ -240,28 +240,28 @@
     }
 
     function drawWheel() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const radPer = (Math.PI * 2) / prizes.length;
+      const radPer = (Math.PI * 2) / prizes.length;
 
-  for (let i = 0; i < prizes.length; i++) {
-    const startAngle = -Math.PI / 2 + i * radPer;
-    const endAngle = startAngle + radPer;
+      for (let i = 0; i < prizes.length; i++) {
+        const startAngle = -Math.PI / 2 + i * radPer;
+        const endAngle   = startAngle + radPer;
 
-    // BG Segment color
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
-    ctx.closePath();
-    ctx.fillStyle = i % 2 === 0 ? "#4FC3F7" : "#81C784";
-    ctx.fill();
+        // BG segment
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = i % 2 === 0 ? "#4FC3F7" : "#81C784";
+        ctx.fill();
 
-    // Text along arc
-    const textRadius = outerRadius - 32;
-    drawTextAlongArc(ctx, prizes[i], centerX, centerY, textRadius, startAngle, endAngle);
-  }
-}
-    // 👉 VERY IMPORTANT: draw wheel once
+        // Text on this slice
+        drawRadialText(prizes[i], startAngle, endAngle);
+      }
+    }
+
+    // draw wheel once
     drawWheel();
 
     // Telegram WebApp
@@ -273,8 +273,8 @@
     const params = new URLSearchParams(window.location.search);
     const cidFromUrl = params.get("cid");
 
-    // ⭐⭐⭐ LIMIT SPIN / DAY (កំណត់នៅទីនេះ)
-    const SPINS_PER_DAY = 5; // change this if you want more/less spins per day
+    // LIMIT SPIN / DAY
+    const SPINS_PER_DAY = 5;
 
     function getUserId() {
       const webUser = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
