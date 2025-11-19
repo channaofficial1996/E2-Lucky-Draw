@@ -145,7 +145,7 @@
     </div>
 
     <div id="center-result">
-      <div class="label">🎊អ្នកទទួលបាន🎊</div>
+      <div class="label">You won</div>
       <div class="prize-text" id="centerPrize">-</div>
     </div>
   </div>
@@ -172,11 +172,11 @@
 
   <script>
     const prizes = [
-      "ប្រាក់បន្ថែម 150%",
       "ប្រាក់បន្ថែម 100%",
       "ប្រាក់បន្ថែម 110%",
-      "ប្រាក់បន្ថែម 3%",
+      "ប្រាក់បន្ថែម 150%",
       "ប្រាក់បន្ថែម 80%",
+      "ប្រាក់បន្ថែម 3%",
       "Try Again",
     ];
 
@@ -202,60 +202,37 @@
     const centerY = canvas.height / 2;
     const outerRadius = Math.min(centerX, centerY) - 5;
 
-    // 🔠 draw radial text (vertical from center out)
-    function drawRadialText(text, startAngle, endAngle) {
-      if (!text) return;
-      const midAngle = (startAngle + endAngle) / 2;
-
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(midAngle);
-
-      ctx.fillStyle = "#ffffff";
-      ctx.font = '20px "Khmer OS Battambang","Hanuman",system-ui,sans-serif';
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
-      const radius = outerRadius - 40;
-
-      // បំបែកជា ២ បន្ទាត់ បើអក្សរវែង
-      const parts = text.split(" ");
-      if (parts.length <= 2) {
-        ctx.fillText(text, 0, -radius);
-      } else {
-        const mid = Math.ceil(parts.length / 2);
-        const line1 = parts.slice(0, mid).join(" ");
-        const line2 = parts.slice(mid).join(" ");
-        ctx.fillText(line1, 0, -radius - 12);
-        ctx.fillText(line2, 0, -radius + 12);
-      }
-
-      ctx.restore();
-    }
-
     function drawWheel() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       const radPer = (Math.PI * 2) / prizes.length;
 
       for (let i = 0; i < prizes.length; i++) {
         const startAngle = -Math.PI / 2 + i * radPer;
         const endAngle   = startAngle + radPer;
+        const midAngle   = (startAngle + endAngle) / 2;
 
-        // BG segment
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
         ctx.closePath();
-        ctx.fillStyle = i % 2 === 0 ? "#4FC3F7" : "#81C784";
+        ctx.fillStyle = i % 2 === 0 ? "#42a5f5" : "#66bb6a";
         ctx.fill();
 
-        // Text on this slice
-        drawRadialText(prizes[i], startAngle, endAngle);
+        ctx.save();
+        const textRadius = outerRadius - 40;
+        ctx.translate(
+          centerX + Math.cos(midAngle) * textRadius,
+          centerY + Math.sin(midAngle) * textRadius
+        );
+        ctx.rotate(midAngle + Math.PI / 2);
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = '18px "Khmer OS Battambang","Hanuman",system-ui,sans-serif';
+        ctx.fillText(prizes[i], 0, 0);
+        ctx.restore();
       }
     }
-
-    // draw wheel once
     drawWheel();
 
     // Telegram WebApp
@@ -267,14 +244,15 @@
     const params = new URLSearchParams(window.location.search);
     const cidFromUrl = params.get("cid");
 
-    // LIMIT SPIN / DAY
-    const SPINS_PER_DAY = 5;
+    // ⭐⭐⭐ LIMIT SPIN / DAY (កំណត់នៅទីនេះ)
+    const SPINS_PER_DAY = 10; // ⬅⬅⬅ កែលេខនេះដើម្បីកំណត់ចំនួន spin / 1ថ្ងៃ / 1 user
 
     function getUserId() {
       const webUser = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
       return cidFromUrl || (webUser && webUser.id) || null;
     }
 
+    // N ដងក្នុង 1ថ្ងៃ
     function canSpinToday() {
       try {
         const uid = getUserId();
@@ -287,11 +265,13 @@
         const lastDate = localStorage.getItem(dateKey);
         let count = Number(localStorage.getItem(countKey) || 0);
 
+        // ថ្ងៃថ្មី → reset count
         if (lastDate !== today) {
           localStorage.setItem(dateKey, today);
           localStorage.setItem(countKey, "0");
           return true;
         }
+
         return count < SPINS_PER_DAY;
       } catch (e) {
         return true;
@@ -339,6 +319,7 @@
     }
 
     spinBtn.onclick = () => {
+
       if (!canSpinToday()) {
         statusEl.textContent = "❌ ថ្ងៃនេះអ្នកបានបង្វិលរួចហើយ សូមព្យាយាមម្តងទៀតនៅថ្ងៃស្អែក!";
         return;
@@ -350,11 +331,13 @@
       statusEl.textContent = "";
       center.classList.remove("show");
 
+      // 🔊 Spin start sound
       spinSoundEl.currentTime = 0;
       spinSoundEl.play().catch(()=>{});
 
       const randIndex = Math.floor(Math.random() * prizes.length);
       const spins = 5;
+
       const targetAngle =
         spins * 360 + (360 - randIndex * anglePer - anglePer / 2);
 
@@ -370,9 +353,11 @@
         statusEl.textContent = "🎊អ្នកទទួលបាន🎊: " + prize + " 🎉";
         showCelebrate();
 
+        // 🔊 Jackpot sound
         jackpotSoundEl.currentTime = 0;
         jackpotSoundEl.play().catch(()=>{});
 
+        // increase count today
         markSpunToday();
 
         statusEl.textContent = "📨កំពុងផ្ញើទៅ bot...";
@@ -397,7 +382,7 @@
       }, 4000);
     };
 
-    const agentUrl = "https://t.me/E2betcs";
+    const agentUrl = "https://t.me/Hi2888CS1";
     agentBtn.onclick = () => {
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(agentUrl);
