@@ -117,6 +117,9 @@ def send_spin_inline(chat_id: int):
 
 def send_start_message(chat_id: int):
     """Show reply keyboard + inline spin button."""
+    # ✅ បន្ថែម menu_txt នៅទីនេះ (original bug: menu_txt មិនបានកំណត់)
+    menu_txt = "ជ្រើសប៊ូតុងខាងក្រោម 👇"
+
     # reply keyboard (2 buttons) – persistent under input bar
     send_message(chat_id, menu_txt, reply_markup=MAIN_KEYBOARD, parse_html=False)
 
@@ -264,9 +267,7 @@ def handle_update(update: dict):
                 return
 
             # ✅ Validate phone number
-            # អនុញ្ញាត:
-            # +855881234567  /  +85510123456  /  0881234567  / 010123456
-            # => +855 + 8–9 digits  ឬ  0 + 8–9 digits
+            # +855881234567 / +85510123456 / 0881234567 / 010123456
             pattern = re.compile(r'^(?:\+855\d{8,9}|0\d{8,9})$')
 
             if not pattern.match(phone):
