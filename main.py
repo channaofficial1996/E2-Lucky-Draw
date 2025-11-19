@@ -118,7 +118,6 @@ def send_spin_inline(chat_id: int):
 def send_start_message(chat_id: int):
     """Show reply keyboard + inline spin button."""
     # reply keyboard (2 buttons) – persistent under input bar
-    menu_txt = "ជ្រើសប៊ូតុងខាងក្រោម 👇"
     send_message(chat_id, menu_txt, reply_markup=MAIN_KEYBOARD, parse_html=False)
 
     # inline button for opening webapp
