@@ -240,26 +240,27 @@
     }
 
     function drawWheel() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const radPer = (Math.PI * 2) / prizes.length;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      for (let i = 0; i < prizes.length; i++) {
-        const startAngle = -Math.PI / 2 + i * radPer;
-        const endAngle   = startAngle + radPer;
+  const radPer = (Math.PI * 2) / prizes.length;
 
-        // segment
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
-        ctx.closePath();
-        ctx.fillStyle = i % 2 === 0 ? "#42a5f5" : "#66bb6a";
-        ctx.fill();
+  for (let i = 0; i < prizes.length; i++) {
+    const startAngle = -Math.PI / 2 + i * radPer;
+    const endAngle = startAngle + radPer;
 
-        // text along radius
-        drawRadialText(prizes[i], startAngle, endAngle);
-      }
-    }
+    // BG Segment color
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = i % 2 === 0 ? "#4FC3F7" : "#81C784";
+    ctx.fill();
 
+    // Text along arc
+    const textRadius = outerRadius - 32;
+    drawTextAlongArc(ctx, prizes[i], centerX, centerY, textRadius, startAngle, endAngle);
+  }
+}
     // 👉 VERY IMPORTANT: draw wheel once
     drawWheel();
 
